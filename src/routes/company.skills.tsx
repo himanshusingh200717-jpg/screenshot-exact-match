@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { memo, useMemo, useState } from "react";
+import { memo, useState } from "react";
 import { ChevronDown, Lock, CheckCircle2, Target } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { useRequiredCompany } from "@/hooks/use-selected-company";
-import { getCompanyProfile, getCompanySkills } from "@/lib/companies";
+import { useCompanyProfile, useCompanySkills } from "@/lib/companyApi";
 import { proficiencyToBloom, scoreToCriticality, type BloomLevel, type Criticality, type DashboardSkill } from "@/lib/companyData";
-import { SKILL_TOPICS } from "@/data/skillTopics";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/company/skills")({
@@ -36,11 +36,10 @@ const CRIT: Record<Criticality, { desc: string; text: string }> = {
   Baseline: { desc: "Below 5 · good foundation", text: "text-beginner" },
 };
 
-const SkillCard = memo(function SkillCard({ skill }: { skill: DashboardSkill }) {
+const SkillCard = memo(function SkillCard({ skill, topics = [] }: { skill: DashboardSkill; topics?: string[] }) {
   const [open, setOpen] = useState(false);
   const bloom = BLOOM[proficiencyToBloom(skill.score)];
   const crit = scoreToCriticality(skill.score);
-  const topics = SKILL_TOPICS[skill.id] ?? [];
   return (
     <div className="rounded-xl border bg-card">
       <button onClick={() => setOpen((o) => !o)} className="w-full p-4 text-left" aria-expanded={open}>
@@ -86,10 +85,58 @@ const SkillCard = memo(function SkillCard({ skill }: { skill: DashboardSkill }) 
 
 function SkillIntelligence() {
   const selected = useRequiredCompany();
-  const profile = useMemo(() => (selected ? getCompanyProfile(selected.companyId) : null), [selected]);
-  const skills = useMemo(() => (selected ? getCompanySkills(selected.companyId) : []), [selected]);
+  const {
+    data: profile,
+    isLoading: isProfileLoading,
+    isError: isProfileError,
+    refetch: refetchProfile,
+  } = useCompanyProfile(selected?.companyId);
 
-  if (!selected || !profile) return <div className="space-y-4 p-4"><Skeleton className="h-16" /><Skeleton className="h-40" /></div>;
+  const {
+    data: skillsData,
+    isLoading: isSkillsLoading,
+    isError: isSkillsError,
+    refetch: refetchSkills,
+  } = useCompanySkills(selected?.companyId);
+
+  const isLoading = !selected || isProfileLoading || isSkillsLoading;
+  const isError = isProfileError || isSkillsError;
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-5xl space-y-4 p-4 sm:p-6">
+        <Skeleton className="h-16 rounded-xl" />
+        <Skeleton className="h-24 rounded-xl" />
+        <div className="space-y-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+  if (isError || !profile) {
+    return (
+      <div className="mx-auto my-16 max-w-md rounded-xl border border-dashed bg-background p-8 text-center">
+        <p className="font-heading text-lg font-semibold">Failed to load skill intelligence</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Could not fetch skill data from Supabase. Ensure your Supabase credentials in .env are valid.
+        </p>
+        <Button
+          className="mt-4"
+          onClick={() => {
+            refetchProfile();
+            refetchSkills();
+          }}
+        >
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  const skills = skillsData?.skills ?? [];
+  const topicsMap = skillsData?.topics ?? {};
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
@@ -119,7 +166,11 @@ function SkillIntelligence() {
         ))}
       </div>
 
-      <div className="space-y-3">{skills.map((s) => <SkillCard key={s.id} skill={s} />)}</div>
+      <div className="space-y-3">
+        {skills.map((s) => (
+          <SkillCard key={s.id} skill={s} topics={s.topics ?? topicsMap[s.id] ?? []} />
+        ))}
+      </div>
     </div>
   );
 }

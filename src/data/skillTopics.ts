@@ -1,4 +1,5 @@
 // 10-level topic ladders per skill (level 1 → 10).
+// Kept as documented offline fallback. Live roadmap data is loaded from public.skill_set_topics via src/lib/companyApi.ts.
 export const SKILL_TOPICS: Record<number, string[]> = {
   1: ["Arrays, strings and complexity basics", "Recursion and simple sorting", "Linked lists, stacks and queues", "Hashing and two-pointer patterns", "Trees, BST and traversals", "Heaps, priority queues and greedy", "Graphs: BFS, DFS, shortest paths", "Dynamic programming patterns", "Advanced graphs, tries, segment trees", "Contest-level problem solving under time limits"],
   2: ["Classes, objects and methods", "Encapsulation and access modifiers", "Constructors and object lifecycle", "Inheritance and method overriding", "Polymorphism and interfaces", "Abstract classes and composition", "SOLID principles in practice", "Common design patterns (Factory, Strategy)", "Designing extensible class hierarchies", "Low-level design of real systems"],

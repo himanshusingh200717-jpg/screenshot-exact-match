@@ -4,7 +4,7 @@ import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { COLLEGE_SHORT } from "@/lib/companies";
+import { COLLEGE_SHORT } from "@/lib/college";
 
 const items = [
   { title: "Company Intelligence", url: "/company/intelligence", icon: BarChart3 },

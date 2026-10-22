@@ -1,5 +1,4 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { getCompanySummaries } from "@/lib/companies";
 
 export interface SelectedCompany { companyId: number; companyName: string; logoUrl: string }
 const KEY = "selected-company";
@@ -24,8 +23,9 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       const raw = localStorage.getItem(KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as SelectedCompany;
-        const match = getCompanySummaries().find((c) => c.companyId === parsed.companyId);
-        if (match) setSelected({ companyId: match.companyId, companyName: match.name, logoUrl: match.logoUrl });
+        if (parsed && typeof parsed.companyId === "number") {
+          setSelected(parsed);
+        }
       }
     } catch { /* ignore */ }
     setReady(true);

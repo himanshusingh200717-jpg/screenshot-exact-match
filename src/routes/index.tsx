@@ -5,7 +5,8 @@ import { CompanyCard } from "@/components/CompanyCard";
 import { TIER_STYLES } from "@/components/tiers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { COLLEGE_NAME, COLLEGE_SHORT, getCompanySummaries } from "@/lib/companies";
+import { COLLEGE_NAME, COLLEGE_SHORT } from "@/lib/college";
+import { useCompanies } from "@/lib/companyApi";
 import { COMPANY_TIERS, type CompanySummary, type CompanyTier } from "@/lib/companyData";
 import { useCompany } from "@/context/CompanyContext";
 import { cn } from "@/lib/utils";
@@ -29,7 +30,7 @@ type Filter = CompanyTier | "All";
 function Index() {
   const navigate = useNavigate();
   const { selectCompany, ready } = useCompany();
-  const companies = useMemo(() => getCompanySummaries(), []);
+  const { data: companies = [], isLoading, isError, refetch } = useCompanies();
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
   const [filter, setFilter] = useState<Filter>("All");
@@ -106,13 +107,23 @@ function Index() {
           ))}
         </div>
 
-        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {!ready
-            ? Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-52 rounded-xl" />)
-            : visible.map((c) => <CompanyCard key={c.companyId} company={c} onSelect={onSelect} />)}
-        </div>
+        {isError && (
+          <div className="mt-6 flex flex-col items-center rounded-xl border border-dashed bg-background py-16 text-center">
+            <p className="font-heading text-lg font-semibold">Failed to load companies</p>
+            <p className="mt-1 text-sm text-muted-foreground">Could not fetch data from Supabase. Ensure your Supabase credentials in .env are valid.</p>
+            <Button className="mt-4" onClick={() => refetch()}>Retry</Button>
+          </div>
+        )}
 
-        {ready && visible.length === 0 && (
+        {!isError && (
+          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {!ready || isLoading
+              ? Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-52 rounded-xl" />)
+              : visible.map((c) => <CompanyCard key={c.companyId} company={c} onSelect={onSelect} />)}
+          </div>
+        )}
+
+        {!isError && ready && !isLoading && visible.length === 0 && (
           <div className="mt-6 flex flex-col items-center rounded-xl border border-dashed bg-background py-16 text-center">
             <p className="font-heading text-lg font-semibold">No companies match</p>
             <p className="mt-1 text-sm text-muted-foreground">Try a different search or category.</p>

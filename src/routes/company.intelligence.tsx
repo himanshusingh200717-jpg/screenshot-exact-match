@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { useRequiredCompany } from "@/hooks/use-selected-company";
-import { getCompanyProfile } from "@/lib/companies";
+import { useCompanyProfile } from "@/lib/companyApi";
 import { isNullish, splitItems } from "@/lib/companyData";
 import { buildIntelligenceSections, type IntelField, type IntelSection } from "@/data/intelligenceData";
 import { cn } from "@/lib/utils";
@@ -82,7 +82,7 @@ const SectionCard = memo(function SectionCard({ s, idx }: { s: IntelSection; idx
 
 function CompanyIntelligence() {
   const selected = useRequiredCompany();
-  const profile = useMemo(() => (selected ? getCompanyProfile(selected.companyId) : null), [selected]);
+  const { data: profile, isLoading, isError, refetch } = useCompanyProfile(selected?.companyId);
   const sections = useMemo(() => buildIntelligenceSections(profile ?? undefined), [profile]);
   const [active, setActive] = useState(0);
   const isScrollingRef = useRef(false);
@@ -114,8 +114,31 @@ function CompanyIntelligence() {
     window.setTimeout(() => { isScrollingRef.current = false; }, 800);
   }, [sections]);
 
-  if (!selected || !profile) {
-    return <div className="space-y-4 p-4"><Skeleton className="h-16" /><Skeleton className="h-10" /><Skeleton className="h-64" /></div>;
+  if (!selected || isLoading) {
+    return (
+      <div className="mx-auto max-w-5xl space-y-4 p-4 sm:p-6">
+        <Skeleton className="h-16 rounded-xl" />
+        <Skeleton className="h-10 rounded-lg" />
+        <div className="mt-6 space-y-4">
+          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-64 rounded-xl" />
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !profile) {
+    return (
+      <div className="mx-auto my-16 max-w-md rounded-xl border border-dashed bg-background p-8 text-center">
+        <p className="font-heading text-lg font-semibold">Failed to load company intelligence</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Could not fetch data from Supabase. Ensure your Supabase credentials in .env are valid.
+        </p>
+        <Button className="mt-4" onClick={() => refetch()}>
+          Retry
+        </Button>
+      </div>
+    );
   }
 
   return (

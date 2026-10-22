@@ -1,4 +1,5 @@
-// Single data-access module. Phase 2: replace SEED_COMPANIES reads with database queries here.
+// Phase 1 seed fallback module. Phase 2 live queries are served via src/lib/companyApi.ts.
+// Kept as a documented offline fallback.
 import { SEED_COMPANIES } from "@/data/seedCompanies";
 import {
   normalizeCompanyProfile,
@@ -8,9 +9,6 @@ import {
   type CompanySummary,
   type DashboardSkill,
 } from "./companyData";
-
-export const COLLEGE_NAME = "JSS UNIVERSITY NOIDA";
-export const COLLEGE_SHORT = "JSS";
 
 export function getCompanySummaries(): CompanySummary[] {
   return SEED_COMPANIES.map((c) => normalizeCompanySummary(c.short_json, c.company_id));

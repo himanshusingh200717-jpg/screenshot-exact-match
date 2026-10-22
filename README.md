@@ -22,3 +22,6 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Phase 2 — Supabase
+Paste `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` into `.env`, then run `npm install && npm run dev`.
